@@ -46,7 +46,6 @@ pipeline {
         stage('Detect Active Environment') {
             steps {
                 script {
-
                     def activeRaw = sh(
                         script: "grep -E 'server (blue|green):3000;' nginx/nginx.conf | grep -v '#' | sed -E 's/server (blue|green):3000;/\\1/'",
                         returnStdout: true
@@ -76,7 +75,6 @@ pipeline {
                     sh """
                     export APP_VERSION=${VERSION}
                     export HEALTH_MODE=${params.HEALTH_MODE}
-
                     docker compose up -d --build nginx ${env.TARGET}
                     """
 
@@ -88,9 +86,7 @@ pipeline {
         stage('Health Check PRO') {
             steps {
                 script {
-
                     echo "Running health check on ${env.TARGET}"
-
                     try {
                         retry(5) {
                             sleep 3
@@ -106,7 +102,6 @@ pipeline {
         stage('Switch Traffic') {
             steps {
                 script {
-
                     echo "Switching traffic from ${env.ACTIVE} to ${env.TARGET}"
 
                     sh """
@@ -122,14 +117,19 @@ pipeline {
         }
 
         stage('Tag Release') {
-        steps {
-            withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'GIT_TOKEN', usernameVariable: 'GIT_USER')]) {
-                sh """
-                git config user.email "jenkins@local"
-                git config user.name "jenkins"
-                git tag v${VERSION}
-                git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/josue466/lab09releasemanagement.git v${VERSION}
-                """
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-credentials',
+                    passwordVariable: 'GIT_TOKEN',
+                    usernameVariable: 'GIT_USER'
+                )]) {
+                    sh """
+                    git config user.email "jenkins@local"
+                    git config user.name "jenkins"
+                    git tag v${VERSION}
+                    git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/josue466/lab09releasemanagement.git v${VERSION}
+                    """
+                }
             }
         }
     }
