@@ -122,13 +122,13 @@ pipeline {
         }
 
         stage('Tag Release') {
-            steps {
+        steps {
+            withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'GIT_TOKEN', usernameVariable: 'GIT_USER')]) {
                 sh """
                 git config user.email "jenkins@local"
                 git config user.name "jenkins"
-
                 git tag v${VERSION}
-                git push origin v${VERSION}
+                git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/josue466/lab09releasemanagement.git v${VERSION}
                 """
             }
         }
